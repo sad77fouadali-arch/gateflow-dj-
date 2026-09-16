@@ -14,7 +14,9 @@ const rateLimit = require('express-rate-limit');
 // ---------- CONFIGURATION ----------
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'gateflow2026';
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'gateflow2026').trim();
+
+
 const TOKEN_TTL = '12h';
 
 // Roles
@@ -180,9 +182,11 @@ app.get('/api/debug', function (req, res) {
 
 
 // Connexion
-app.post('/api/login', loginLimiter, function (req, res) {
-  const phone = String(req.body.phone || '').trim();
-  const password = String(req.body.password || '');
+1app.post('/api/login', loginLimiter, function (req, res) {
+const phone = String(req.body.phone || '').trim();
+const password = String(req.body.password || '').trim();
+
+
   if (!phone || !password) return res.status(400).json({ success: false, error: 'Numero et mot de passe requis' });
   const user = db.prepare('SELECT * FROM users WHERE phone = ?').get(phone);
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
