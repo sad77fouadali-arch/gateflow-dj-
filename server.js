@@ -87,14 +87,18 @@ db.exec(
   ")"
 );
 
-// Compte admin initial
+/// Compte admin : synchronise le mot de passe a chaque demarrage
+const adminHash = bcrypt.hashSync(ADMIN_PASSWORD, 10);
 const adminExists = db.prepare("SELECT id FROM users WHERE role = 'admin'").get();
 if (!adminExists) {
   db.prepare(
     "INSERT INTO users (full_name, phone, role, company, badge_number, password_hash) VALUES (?,?,?,?,?,?)"
-  ).run('Administrateur', '0000000000', ROLE_ADMIN, 'SYSTEM', 'ADMIN', bcrypt.hashSync(ADMIN_PASSWORD, 10));
-  console.log('Compte admin cree (mot de passe par defaut: gateflow2026 — A CHANGER)');
+  ).run('Administrateur', '0000000000', ROLE_ADMIN, 'SYSTEM', 'ADMIN', adminHash);
+  console.log('Compte admin cree');
+} else {
+  db.prepare("UPDATE users SET password_hash = ? WHERE role = 'admin'").run(adminHash);
 }
+
 
 // ---------- APPLI EXPRESS ----------
 const app = express();
