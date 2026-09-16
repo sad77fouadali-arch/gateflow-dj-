@@ -166,7 +166,18 @@ function requireRoles(roles) {
 }
 
 // ---------- ROUTES ----------
-app.get('/healthz', function (req, res) { res.json({ ok: true, service: 'gateflow-dj' }); });
+app.get('/healthz', function (req, res) { res.json({ ok: true, service: 'gateflow-dj' }); });// SONDE DE DIAGNOSTIC (temporaire)
+app.get('/api/debug', function (req, res) {
+  const admin = db.prepare("SELECT phone, length(password_hash) AS hl FROM users WHERE role='admin'").get();
+  res.json({
+    adminExiste: !!admin,
+    telephoneAdmin: admin ? admin.phone : null,
+    variableAdminPresente: !!process.env.ADMIN_PASSWORD,
+    longueurVariable: process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.length : 0,
+    node: process.version
+  });
+});
+
 
 // Connexion
 app.post('/api/login', loginLimiter, function (req, res) {
