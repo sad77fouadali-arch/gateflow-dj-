@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GateFlow DJ — Coordination Sécurité Portuaire</title>
+<meta name="description" content="Plateforme professionnelle de coordination entre le PSD et le Sécurisé Département du terminal de Djibouti. Demandes, validations et rapports en temps réel.">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,Arial,sans-serif; }
+  body { background:#0a1628; color:#e6edf7; }
+  header { position:fixed; width:100%; top:0; background:rgba(10,22,40,.95); border-bottom:1px solid #1e3a5f; z-index:100; }
+  .nav { max-width:1200px; margin:auto; display:flex; justify-content:space-between; align-items:center; padding:14px 20px; }
+  .logo { font-size:1.3rem; font-weight:800; color:#22d3ee; }
+  .logo span { color:#4ade80; }
+  .nav a { color:#9fb3c8; text-decoration:none; margin-left:20px; font-size:.9rem; }
+  .nav a:hover { color:#22d3ee; }
+  .hero { max-width:1200px; margin:auto; padding:140px 20px 60px; text-align:center; }
+  .hero h1 { font-size:2.4rem; margin-bottom:16px; }
+  .hero h1 em { color:#22d3ee; font-style:normal; }
+  .hero p { color:#9fb3c8; max-width:640px; margin:0 auto 30px; font-size:1.05rem; }
+  .btn { display:inline-block; background:linear-gradient(135deg,#0891b2,#22d3ee); color:#06202e; font-weight:700; padding:14px 34px; border-radius:10px; text-decoration:none; }
+  .stats { display:flex; justify-content:center; gap:40px; margin-top:50px; flex-wrap:wrap; }
+  .stat { text-align:center; }
+  .stat b { display:block; font-size:1.8rem; color:#4ade80; }
+  .section { max-width:1200px; margin:auto; padding:60px 20px; }
+  .section h2 { text-align:center; font-size:1.7rem; margin-bottom:40px; color:#e6edf7; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
+  .card { background:#10233d; border:1px solid #1e3a5f; border-radius:14px; padding:28px; }
+  .card h3 { color:#22d3ee; margin-bottom:12px; }
+  .card p { color:#9fb3c8; font-size:.95rem; line-height:1.6; }
+  .steps { counter-reset:step; }
+  .step { display:flex; gap:18px; margin-bottom:24px; align-items:flex-start; }
+  .step::before { counter-increment:step; content:counter(step); background:#22d3ee; color:#06202e; font-weight:800; min-width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .step b { color:#e6edf7; }
+  .step p { color:#9fb3c8; font-size:.95rem; }
+  .map-box { border-radius:14px; overflow:hidden; border:1px solid #1e3a5f; }
+  .map-box iframe { width:100%; height:420px; border:0; filter:grayscale(.3) contrast(1.05); }
+  .quote { background:linear-gradient(135deg,#0e2a1a,#10233d); border-left:4px solid #4ade80; border-radius:10px; padding:26px; margin-top:30px; }
+  .quote p { font-style:italic; color:#c9f7d9; font-size:1.05rem; }
+  .quote small { color:#4ade80; font-weight:700; }
+  footer { border-top:1px solid #1e3a5f; text-align:center; padding:30px 20px; color:#64748b; font-size:.85rem; }
+  @media(max-width:640px){ .hero h1{font-size:1.7rem;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">GateFlow <span>DJ</span></div>
+    <nav>
+      <a href="#fonctionnement">Fonctionnement</a>
+      <a href="#inscription">Inscription</a>
+      <a href="#terminal">Terminal</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>La coordination sécurité,<br><em>en temps réel.</em></h1>
+  <p>Plateforme de liaison entre le Port Sécurité Djibouti (PSD) et le Sécurisé Département. Chaque décision tracée, chaque feu vert signé, chaque shift rapporté.</p>
+  <a href="#inscription" class="btn">Procédure d'inscription</a>
+  <div class="stats">
+    <div class="stat"><b>&lt; 30 s</b>Délai de validation</div>
+    <div class="stat"><b>100%</b>Décisions tracées</div>
+    <div class="stat"><b>3 shifts</b>Couverture 24h/24</div>
+  </div>
+</section>
+
+<section class="section" id="fonctionnement">
+  <h2>Comment ça fonctionne</h2>
+  <div class="grid">
+    <div class="card"><h3>Demande en 2 touches</h3><p>L'agent signale un cas (badge oublié, camion en panne, document expiré). Le centre et l'Inspecteur sont notifiés instantanément.</p></div>
+    <div class="card"><h3>Validation signée</h3><p>Le Sécurisé Département approuve ou refuse en un clic. Chaque décision est enregistrée avec le nom et la fonction du responsable.</p></div>
+    <div class="card"><h3>Rapport automatique</h3><p>À la fin de chaque shift, le rapport complet est généré et transmis à l'Administration — sans effort, sans oubli.</p></div>
+  </div>
+</section>
+
+<section class="section" id="terminal">
+  <h2>Zone couverte — Terminal de Doraleh</h2>
+  <div class="map-box">
+    <iframe src="https://maps.google.com/maps?q=Doraleh%20Container%20Terminal%20Djibouti&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
+  </div>
+  <div class="quote">
+    <p>« La sécurité d'un port ne repose pas sur un seul homme, mais sur la précision de chaque lien entre eux. Vous êtes ce lien. »</p>
+    <small>— Message aux équipes GateFlow DJ</small>
+  </div>
+</section>
+
+<section class="section" id="inscription">
+  <h2>Procédure d'inscription</h2>
+  <div class="steps">
+    <div class="step"><div><b>Invitation officielle uniquement</b><p>Aucune inscription publique. Votre Inspecteur ou Supérieur transmet votre demande à l'administrateur de la plateforme.</p></div></div>
+    <div class="step"><div><b>Enregistrement de votre identité</b><p>Votre nom, fonction et matricule/badge sont enregistrés dans le système.</p></div></div>
+    <div class="step"><div><b>Vérification WhatsApp</b><p>Votre numéro WhatsApp professionnel est associé à votre compte. Toutes les notifications vous parviennent sur ce numéro.</p></div></div>
+    <div class="step"><div><b>Activation par l'administrateur</b><p>Après validation, vous recevez vos identifiants de connexion sécurisée. Votre compte est personnel et intransmissible.</p></div></div>
+  </div>
+</section>
+
+<footer>
+  GateFlow DJ — Plateforme de coordination sécurité portuaire · Accès réservé au personnel autorisé · © 2026
+</footer>
+
+</body>
+</html>
