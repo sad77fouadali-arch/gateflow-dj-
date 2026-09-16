@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GateFlow DJ — Plateforme</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,Arial,sans-serif; }
+  body { background:#0a1628; color:#e6edf7; min-height:100vh; }
+  .topbar { background:#0d1f38; border-bottom:1px solid #1e3a5f; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+  .logo { font-weight:800; color:#22d3ee; font-size:1.1rem; }
+  .logo span { color:#4ade80; }
+  .who { font-size:.75rem; color:#9fb3c8; }
+  .btn { background:linear-gradient(135deg,#0891b2,#22d3ee); color:#06202e; border:0; font-weight:700; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:.9rem; }
+  .btn.red { background:#dc2626; color:#fff; }
+  .btn.green { background:#16a34a; color:#fff; }
+  .btn.gray { background:#334155; color:#e6edf7; }
+  .btn.sm { padding:6px 12px; font-size:.8rem; }
+  .wrap { max-width:900px; margin:auto; padding:20px; }
+  .card { background:#10233d; border:1px solid #1e3a5f; border-radius:14px; padding:20px; margin-bottom:20px; }
+  .card h2 { font-size:1.15rem; color:#22d3ee; margin-bottom:14px; }
+  input, select, textarea { width:100%; background:#0a1628; border:1px solid #1e3a5f; color:#e6edf7; padding:11px 12px; border-radius:8px; margin-bottom:12px; font-size:.95rem; }
+  label { font-size:.8rem; color:#9fb3c8; display:block; margin-bottom:4px; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .tab { padding:9px 16px; border-radius:8px; background:#10233d; border:1px solid #1e3a5f; color:#9fb3c8; cursor:pointer; font-size:.85rem; }
+  .tab.active { background:#0e7490; color:#fff; border-color:#22d3ee; }
+  .item { background:#0d1f38; border:1px solid #1e3a5f; border-radius:10px; padding:14px; margin-bottom:10px; }
+  .item b { color:#e6edf7; }
+  .meta { font-size:.75rem; color:#9fb3c8; margin-top:6px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.72rem; font-weight:700; }
+  .b-attente { background:#78350f; color:#fbbf24; }
+  .b-ok { background:#14532d; color:#4ade80; }
+  .b-non { background:#7f1d1d; color:#f87171; }
+  .ok { color:#4ade80; } .err { color:#f87171; } .muted { color:#9fb3c8; font-size:.85rem; }
+  #loginBox { max-width:420px; margin:60px auto; }
+  .hidden { display:none; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+</style>
+</head>
+<body>
+
+<div id="loginBox" class="card">
+  <h2 style="text-align:center">🔐 Connexion GateFlow DJ</h2>
+  <label>Numéro WhatsApp professionnel</label>
+  <input id="phone" type="tel" placeholder="ex: 77xxxxxx" autocomplete="username">
+  <label>Mot de passe</label>
+  <input id="pwd" type="password" placeholder="••••••••" autocomplete="current-password">
+  <button class="btn" style="width:100%" onclick="doLogin()">Se connecter</button>
+  <p id="loginMsg" style="text-align:center;margin-top:12px;font-size:.85rem"></p>
+  <p class="muted" style="text-align:center;margin-top:14px;font-size:.75rem">Accès réservé au personnel autorisé.<br>Compte sur invitation uniquement.</p>
+</div>
+
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div>
+      <div class="logo">GateFlow <span>DJ</span></div>
+      <div class="who" id="whoTxt"></div>
+    </div>
+    <button class="btn gray sm" onclick="logout()">Déconnexion</button>
+  </div>
+  <div class="wrap">
+    <div class="tabs" id="tabs"></div>
+    <div id="tabContent"></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let ME = null, TOKEN = localStorage.getItem('gf_token') || '';
+
+const ROLE_LABELS = {
+  admin:'Administrateur', agent_psd:'Agent PSD', chef_equipe:"Chef d'équipe",
+  superieur_psd:'Supérieur PSD', inspecteur_psd:'Inspecteur PSD', operateur_central:'Opérateur central',
+  superieur_terrain:'Supérieur terrain SD', superviseur_sd:'Superviseur SD',
+  coordinateur_sd:'Coordinateur SD', head_manager:'Head Manager SD'
+};
+const SD_DECIDERS = ['superieur_terrain','superviseur_sd','coordinateur_sd','head_manager'];
+const DIRECTIVE_WRITERS = ['inspecteur_psd','superieur_psd','superieur_terrain','superviseur_sd','coordinateur_sd','head_manager'];
+const TYPE_LABELS = { badge_oublie:'Badge oublié', panne_camion:'Camion en panne', document_expire:'Document expiré', autre:'Autre' };
+const STATUS_LABELS = { en_attente:'EN ATTENTE', approuvee:'APPROUVÉE', refusee:'REFUSÉE' };
+
+async function api(path, method, body) {
+  const res = await fetch(API + path, {
+    method: method || 'GET',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + TOKEN },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+async function doLogin() {
+  const msg = document.getElementById('loginMsg');
+  msg.textContent = 'Connexion...'; msg.className = 'muted';
+  const data = await fetch(API + '/api/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ phone: phone.value.trim(), password: pwd.value })
+  }).then(r => r.json());
+  if (data.success) {
+    TOKEN = data.token; ME = data.user;
+    localStorage.setItem('gf_token', TOKEN);
+    startApp();
+  } else {
+    msg.textContent = data.error || 'Erreur'; msg.className = 'err';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('gf_token'); TOKEN=''; ME=null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginBox').classList.remove('hidden');
+}
+
+async function boot() {
+  if (!TOKEN) return;
+  const data = await api('/api/me');
+  if (data.success) { ME = data.user; startApp(); }
+  else logout();
+}
+
+function startApp() {
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('whoTxt').textContent =
+    ME.full_name + ' — ' + (ROLE_LABELS[ME.role] || ME.role) + ' (' + ME.company + ')';
+  buildTabs(); showTab('demande');
+}
+
+function buildTabs() {
+  const t = [['demande','📝 Nouvelle demande'],['liste','📋 Demandes'],['consignes','🗣️ Consignes']];
+  if (SD_DECIDERS.indexOf(ME.role) >= 0) t.push(['decider','✅ À valider']);
+  if (ME.role === 'admin') t.push(['comptes','👥 Comptes'],['audit','🛡️ Audit']);
+  if (['inspecteur_psd','head_manager'].indexOf(ME.role) >= 0 && ME.role !== 'admin') t.push(['audit','🛡️ Audit']);
+  document.getElementById('tabs').innerHTML =
+    t.map(x => '<div class="tab" id="tab-' + x[0] + '" onclick="showTab(\'' + x[0] + '\')">' + x[1] + '</div>').join('');
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  const el = document.getElementById('tab-' + name); if (el) el.classList.add('active');
+  if (name==='demande') viewDemande();
+  if (name==='liste') viewListe(false);
+  if (name==='decider') viewListe(true);
+  if (name==='consignes') viewConsignes();
+  if (name==='comptes') viewComptes();
+  if (name==='audit') viewAudit();
+}
+
+// ---- NOUVELLE DEMANDE ----
+function viewDemande() {
+  document.getElementById('tabContent').innerHTML =
+  '<div class="card"><h2>Signaler un cas</h2>' +
+  '<label>Type de demande</label>' +
+  '<select id="rType"><option value="badge_oublie">Badge oublié</option><option value="panne_camion">Camion en panne</option><option value="document_expire">Document expiré</option><option value="autre">Autre</option></select>' +
+  '<label>Nom de la personne / chauffeur concerné</label>' +
+  '<input id="rName" placeholder="ex: Ahmed Ali">' +
+  '<div class="row2"><div><label>Matricule / badge (optionnel)</label><input id="rBadge" placeholder="ex: 4521"></div>' +
+  '<div><label>Note (optionnel)</label><input id="rNote" placeholder="ex: badge resté au vestiaire"></div></div>' +
+  '<button class="btn" onclick="createRequest()">Envoyer la demande</button>' +
+  '<p id="rMsg" style="margin-top:10px;font-size:.85rem"></p></div>';
+}
+
+async function createRequest() {
+  const d = await api('/api/requests','POST',{ type:rType.value, subject_name:rName.value.trim(), badge_number:rBadge.value.trim(), note:rNote.value.trim() });
+  const m = document.getElementById('rMsg');
+  if (d.success) { m.textContent = '✅ Demande #' + d.id + ' envoyée au Sécurisé Département'; m.className='ok'; rName.value=rBadge.value=rNote.value=''; }
+  else { m.textContent = '❌ ' + d.error; m.className='err'; }
+}
+
+// ---- LISTE DES DEMANDES ----
+async function viewListe(pendingOnly) {
+  const d = await api('/api/requests');
+  let rows = d.requests || [];
+  if (pendingOnly) rows = rows.filter(r => r.status === 'en_attente');
+  const html = rows.length ? rows.map(r =>
+    '<div class="item"><b>#' + r.id + ' — ' + (TYPE_LABELS[r.type]||r.type) + '</b> ' +
+    '<span class="badge b-' + (r.status==='en_attente'?'attente':(r.status==='approuvee'?'ok':'non')) + '">' + STATUS_LABELS[r.status] + '</span>' +
+    '<div class="meta">👤 ' + r.subject_name + (r.badge_number?' · Badge: '+r.badge_number:'') + (r.note?' · '+r.note:'') + '</div>' +
+    '<div class="meta">Créée par ' + r.created_by_name + ' (' + (ROLE_LABELS[r.created_by_role]||r.created_by_role) + ') le ' + r.created_at + '</div>' +
+    (r.status!=='en_attente' ? '<div class="meta '+(r.status==='approuvee'?'ok':'err')+'">→ ' + (r.status==='approuvee'?'✅ Approuvée':'❌ Refusée') + ' par <b>' + r.decided_by_name + '</b> (' + (ROLE_LABELS[r.decided_by_role]||r.decided_by_role) + ') le ' + r.decided_at + (r.decision_note?' — '+r.decision_note:'') + '</div>' : '') +
+    (pendingOnly && r.status==='en_attente' ?
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="btn green sm" onclick="decide('+r.id+',true)">✅ Approuver</button>' +
+      '<button class="btn red sm" onclick="decide('+r.id+',false)">❌ Refuser</button>' +
+      '<button class="btn gray sm" onclick="waNotify('+r.id+',\''+r.subject_name.replace(/'/g,"")+'\',\''+(TYPE_LABELS[r.type]||r.type)+'\')">📱 Notifier WhatsApp</button>' +
+      '</div>' : '') +
+    '</div>').join('')
+    : '<div class="card"><p class="muted">Aucune demande.</p></div>';
+  document.getElementById('tabContent').innerHTML = '<div class="card"><h2>' + (pendingOnly?'Demandes en attente de validation':'Historique des demandes') + '</h2>' + html + '</div>';
+}
+
+async function decide(id, approve) {
+  const note = prompt(approve ? 'Note (optionnel) — ex: badge vérifié' : 'Motif du refus (optionnel)') || '';
+  const d = await api('/api/requests/' + id + '/decide','POST',{ approve:approve, note:note });
+  if (d.success) { alert('Demande #' + id + ' ' + (approve?'approuvée ✅':'refusée ❌') + ' — enregistré dans le journal'); viewListe(true); }
+  else alert('Erreur: ' + d.error);
+}
+
+function waNotify(id, name, type) {
+  const txt = encodeURIComponent('🔔 GateFlow DJ — Demande #' + id + ' en attente\nType: ' + type + '\nConcerné: ' + name + '\nMerci de valider sur la plateforme.');
+  window.open('https://wa.me/?text=' + txt, '_blank');
+}
+
+// ---- CONSIGNES ----
+async function viewConsignes() {
+  const d = await api('/api/directives');
+  const canWrite = DIRECTIVE_WRITERS.indexOf(ME.role) >= 0;
+  const list = (d.directives||[]).map(x =>
+    '<div class="item"><b>' + x.title + '</b><div class="meta">Par ' + x.author_name + ' (' + (ROLE_LABELS[x.author_role]||x.author_role) + ') le ' + x.created_at + '</div><p style="margin-top:8px;font-size:.9rem">' + x.body + '</p></div>').join('') || '<p class="muted">Aucune consigne publiée.</p>';
+  document.getElementById('tabContent').innerHTML =
+    (canWrite ? '<div class="card"><h2>Publier une consigne de service</h2>' +
+    '<input id="dTitle" placeholder="Titre — ex: Consigne prise de poste 22h">' +
+    '<textarea id="dBody" rows="3" placeholder="Contenu de la consigne..."></textarea>' +
+    '<button class="btn" onclick="postDirective()">Publier</button><p id="dMsg" style="margin-top:8px;font-size:.85rem"></p></div>' : '') +
+    '<div class="card"><h2>Consignes de service</h2>' + list + '</div>';
+}
+
+async function postDirective() {
+  const d = await api('/api/directives','POST',{ title:dTitle.value.trim(), body:dBody.value.trim() });
+  const m = document.getElementById('dMsg');
+  if (d.success) { m.textContent='✅ Consigne publiée'; m.className='ok'; viewConsignes(); }
+  else { m.textContent='❌ '+d.error; m.className='err'; }
+}
+
+// ---- COMPTES (admin) ----
+function viewComptes() {
+  document.getElementById('tabContent').innerHTML =
+  '<div class="card"><h2>Créer un compte (invitation)</h2>' +
+  '<label>Nom complet</label><input id="uName" placeholder="ex: Mohamed Omar">' +
+  '<div class="row2"><div><label>Numéro WhatsApp</label><input id="uPhone" placeholder="ex: 77xxxxxx"></div>' +
+  '<div><label>Matricule / badge</label><input id="uBadge" placeholder="ex: 4521"></div></div>' +
+  '<label>Fonction</label><select id="uRole">' +
+  '<optgroup label="PSD"><option value="agent_psd">Agent PSD</option><option value="chef_equipe">Chef d\'équipe</option><option value="superieur_psd">Supérieur PSD</option><option value="inspecteur_psd">Inspecteur PSD</option><option value="operateur_central">Opérateur central</option></optgroup>' +
+  '<optgroup label="Sécurisé Département"><option value="superieur_terrain">Supérieur terrain</option><option value="superviseur_sd">Superviseur</option><option value="coordinateur_sd">Coordinateur</option><option value="head_manager">Head Manager</option></optgroup>' +
+  '</select>' +
+  '<label>Mot de passe temporaire</label><input id="uPwd" placeholder="à communiquer au agent">' +
+  '<button class="btn" onclick="createUser()">Créer le compte</button><p id="uMsg" style="margin-top:8px;font-size:.85rem"></p></div>' +
+  '<div class="card"><h2>Comptes existants</h2><div id="userList"><p class="muted">Chargement...</p></div></div>';
+  loadUsers();
+}
+
+async function loadUsers() {
+  const d = await api('/api/users');
+  document.getElementById('userList').innerHTML = (d.users||[]).map(u =>
+    '<div class="item"><b>' + u.full_name + '</b> ' + (u.active?'<span class="badge b-ok">ACTIF</span>':'<span class="badge b-non">SUSPENDU</span>') +
+    '<div class="meta">' + (ROLE_LABELS[u.role]||u.role) + ' · ' + u.company + ' · WhatsApp: ' + u.phone + (u.badge_number?' · Badge: '+u.badge_number:'') + '</div>' +
+    (u.role!=='admin' ? '<div style="margin-top:8px"><button class="btn '+(u.active?'red':'green')+' sm" onclick="toggleUser('+u.id+','+(u.active?0:1)+')">'+(u.active?'Suspendre':'Réactiver')+'</button></div>' : '') +
+    '</div>').join('');
+}
+
+async function createUser() {
+  const d = await api('/api/users','POST',{ full_name:uName.value.trim(), phone:uPhone.value.trim(), role:uRole.value, badge_number:uBadge.value.trim(), password:uPwd.value });
+  const m = document.getElementById('uMsg');
+  if (d.success) { m.textContent='✅ Compte créé'; m.className='ok'; loadUsers(); }
+  else { m.textContent='❌ '+d.error; m.className='err'; }
+}
+
+async function toggleUser(id, active) {
+  await api('/api/users/' + id, 'PATCH', { active: !!active });
+  loadUsers();
+}
+
+// ---- AUDIT ----
+async function viewAudit() {
+  const d = await api('/api/audit');
+  const rows = (d.audit||[]).map(a =>
+    '<div class="item"><b>' + a.action + '</b><div class="meta">Par ' + a.actor_name + ' — ' + a.created_at + '</div>' +
+    (a.details?'<div class="meta">' + a.details + '</div>':'') + '</div>').join('') || '<p class="muted">Journal vide.</p>';
+  document.getElementById('tabContent').innerHTML = '<div class="card"><h2>🛡️ Journal d\'audit (inviolable)</h2>' + rows + '</div>';
+}
+
+boot();
+</script>
+</body>
+</html>
