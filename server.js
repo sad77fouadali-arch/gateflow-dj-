@@ -120,7 +120,8 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false,  validate: { xForwardedForHeader: false },
+
   message: { success: false, error: 'Trop de tentatives. Reessayez dans 15 minutes.' }
 });
 
@@ -182,7 +183,7 @@ app.get('/api/debug', function (req, res) {
 
 
 // Connexion
-1app.post('/api/login', loginLimiter, function (req, res) {
+app.post('/api/login', loginLimiter, function (req, res) {
 const phone = String(req.body.phone || '').trim();
 const password = String(req.body.password || '').trim();
 
